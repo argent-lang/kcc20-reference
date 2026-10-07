@@ -1,0 +1,114 @@
+{
+  "app": "KCC20PublicMint",
+  "root": "contracts/public_mint.ag",
+  "modules": [
+    "contracts/public_mint.ag",
+    "contracts/token_seed.ag",
+    "contracts/kcc20.ag"
+  ],
+  "templates": [
+    { "actor": "KCC20", "symbol": "gen__kcc20_template", "hash": null },
+    { "actor": "PublicMint", "symbol": "gen__public_mint_template", "hash": null },
+    { "actor": "TokenSeed", "symbol": "gen__token_seed_template", "hash": null }
+  ],
+  "actors": [
+    {
+      "name": "KCC20",
+      "state": "KCC20State",
+      "sil": "sil/KCC20.sil",
+      "entries": [
+        {
+          "name": "transfer",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "next_outputs", "auth_index": null, "actors": ["KCC20"], "cardinality": { "kind": "range", "minimum": 1, "maximum": 3 } }] },
+          "consumes": [{ "name": "delegates", "actor": "KCC20", "cardinality": { "kind": "range", "minimum": 0, "maximum": 2 } }],
+          "routes": [{ "output": "next_outputs", "successor": { "kind": "constructed", "arity": "many", "actor": "KCC20", "state": "next_states" } }]
+        },
+        {
+          "name": "transfer_delegator",
+          "kind": "delegate",
+          "emits": { "kind": "none" },
+          "consumes": [{ "name": "leader", "actor": "KCC20" }],
+          "routes": []
+        }
+      ]
+    },
+    {
+      "name": "PublicMint",
+      "state": "PublicMintState",
+      "sil": "sil/PublicMint.sil",
+      "entries": [
+        {
+          "name": "mint",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "minter", "auth_index": 0, "actors": ["PublicMint"] }, { "name": "recipient", "auth_index": 1, "actors": ["KCC20"] }] },
+          "consumes": [],
+          "routes": [{ "output": "minter", "successor": { "kind": "constructed", "actor": "PublicMint", "state": "next_minter" } }, { "output": "recipient", "successor": { "kind": "constructed", "actor": "KCC20", "state": "recipient_state" } }]
+        },
+        {
+          "name": "split",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "minter", "auth_index": 0, "actors": ["PublicMint"] }, { "name": "additional", "auth_index": 1, "actors": ["PublicMint"] }] },
+          "consumes": [],
+          "routes": [{ "output": "minter", "successor": { "kind": "constructed", "actor": "PublicMint", "state": "retained" } }, { "output": "additional", "successor": { "kind": "constructed", "actor": "PublicMint", "state": "added" } }]
+        },
+        {
+          "name": "reclaim",
+          "kind": "leader",
+          "emits": { "kind": "none" },
+          "consumes": [],
+          "routes": []
+        },
+        {
+          "name": "reclaim_into",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "minter", "auth_index": 0, "actors": ["PublicMint"] }] },
+          "consumes": [{ "name": "retiring", "actor": "PublicMint" }],
+          "routes": [{ "output": "minter", "successor": { "kind": "constructed", "actor": "PublicMint", "state": "next_minter" } }]
+        },
+        {
+          "name": "reclaim_delegator",
+          "kind": "delegate",
+          "emits": { "kind": "none" },
+          "consumes": [{ "name": "leader", "actor": "PublicMint" }],
+          "routes": []
+        }
+      ]
+    },
+    {
+      "name": "TokenSeed",
+      "state": "TokenSeedState",
+      "sil": "sil/TokenSeed.sil",
+      "entries": [
+        {
+          "name": "create",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "seeder", "auth_index": 0, "actors": ["TokenSeed"] }, { "name": "recipient", "auth_index": 1, "actors": ["KCC20"] }] },
+          "consumes": [],
+          "routes": [{ "output": "seeder", "successor": { "kind": "exact_self" } }, { "output": "recipient", "successor": { "kind": "constructed", "actor": "KCC20", "state": "recipient_state" } }]
+        },
+        {
+          "name": "split",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "seeder", "auth_index": 0, "actors": ["TokenSeed"] }, { "name": "additional", "auth_index": 1, "actors": ["TokenSeed"] }] },
+          "consumes": [],
+          "routes": [{ "output": "seeder", "successor": { "kind": "exact_self" } }, { "output": "additional", "successor": { "kind": "constructed", "actor": "TokenSeed", "state": "added" } }]
+        },
+        {
+          "name": "reclaim",
+          "kind": "leader",
+          "emits": { "kind": "outputs", "outputs": [{ "name": "seeder", "auth_index": 0, "actors": ["TokenSeed"] }] },
+          "consumes": [{ "name": "retiring", "actor": "TokenSeed" }],
+          "routes": [{ "output": "seeder", "successor": { "kind": "exact_self" } }]
+        },
+        {
+          "name": "reclaim_delegator",
+          "kind": "delegate",
+          "emits": { "kind": "none" },
+          "consumes": [{ "name": "leader", "actor": "TokenSeed" }],
+          "routes": []
+        }
+      ]
+    }
+  ]
+}

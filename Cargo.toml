@@ -1,0 +1,25 @@
+[package]
+name = "kcc20-reference"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94.1"
+description = "KCC20 fungible-token reference contract and offline conformance tests"
+repository = "https://github.com/argent-lang/kcc20-reference"
+license = "ISC"
+publish = false
+
+[[bin]]
+name = "kcc20"
+path = "src/bin/kcc20/main.rs"
+
+[dependencies]
+blake3 = "1.8.7"
+# Keep compiler, runtime, and consensus revisions aligned.
+argent = { git = "https://github.com/argent-lang/argent", rev = "9a9f4b107116d0b259fae629f200fa3b663e7e9d" }
+argent-runtime = { git = "https://github.com/argent-lang/argent", rev = "9a9f4b107116d0b259fae629f200fa3b663e7e9d" }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+secp256k1 = { version = "0.29", features = ["global-context", "rand-std"] }
+
+[dev-dependencies]
+kaspa-txscript = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+serde_json = "1"
