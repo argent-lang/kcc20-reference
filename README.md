@@ -13,6 +13,17 @@ The repository implements the `KCC20` actor in Argent and includes a
 `KCC20PublicMint` app that adds permissionless issuance and zero-token receiving
 UTXOs, with offline examples and contract tests.
 
+## KAS20 example
+
+The [KAS20 example](examples/kas20/README.md), a token with the symbol KAS, is a
+self-contained crate under `examples/kas20/`, with its own contracts, tests, and
+fixtures. It imports the reference token definitions and adds KAS backing,
+owner-authorized burning, and an offline genesis demo.
+
+```sh
+cargo run --locked --manifest-path examples/kas20/Cargo.toml -- demo
+```
+
 ## KCC20 actor
 
 [contracts/kcc20.ag](contracts/kcc20.ag) implements the standard
@@ -197,7 +208,7 @@ The examples compile the app into `build/public-mint/`. Use
 The generated SIL, artifact, and manifest are also tracked in
 `fixtures/public-mint/` so contract and compiler changes can be reviewed in Git.
 Temporary build output stays in the ignored `build/` directory. Regenerate the
-pinned fixtures with:
+pinned reference fixtures with:
 
 ```sh
 cargo run --locked --example build_contracts
@@ -213,7 +224,7 @@ cargo run --locked --example build_contracts
 - [src/bin/kcc20/public_mint.rs](src/bin/kcc20/public_mint.rs): local launch, mint, and transfer example.
 - [src/bin/kcc20/public_mint/tests.rs](src/bin/kcc20/public_mint/tests.rs): issuance tests.
 - [src/bin/kcc20/public_mint/tests/lifecycle.rs](src/bin/kcc20/public_mint/tests/lifecycle.rs): initial minter and seeder lifecycle tests.
-- [src/bin/kcc20/support.rs](src/bin/kcc20/support.rs): offline keys and transaction signing.
+- [src/demo_support.rs](src/demo_support.rs): shared offline keys and transaction signing.
 - [src/bin/kcc20/tests.rs](src/bin/kcc20/tests.rs): contract and ABI tests.
 - [src/bin/kcc20/tests/conformance_vectors.rs](src/bin/kcc20/tests/conformance_vectors.rs): spec vector encoding, hash, and VM tests.
 - [examples/build_contracts.rs](examples/build_contracts.rs): fixture regeneration.

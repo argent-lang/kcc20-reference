@@ -1,0 +1,253 @@
+{
+  "actors": [
+    {
+      "entries": [
+        {
+          "consumes": [
+            {
+              "actor": "KAS20",
+              "cardinality": {
+                "kind": "range",
+                "maximum": 2,
+                "minimum": 0
+              },
+              "name": "delegates"
+            }
+          ],
+          "emits": {
+            "kind": "outputs",
+            "outputs": [
+              {
+                "actors": [
+                  "KAS20"
+                ],
+                "auth_index": null,
+                "cardinality": {
+                  "kind": "range",
+                  "maximum": 3,
+                  "minimum": 1
+                },
+                "name": "next_outputs"
+              }
+            ]
+          },
+          "kind": "leader",
+          "name": "transfer",
+          "routes": [
+            {
+              "output": "next_outputs",
+              "successor": {
+                "actor": "KAS20",
+                "arity": "many",
+                "kind": "constructed",
+                "state": "next_states"
+              }
+            }
+          ]
+        },
+        {
+          "consumes": [
+            {
+              "actor": "KAS20",
+              "name": "leader"
+            }
+          ],
+          "emits": {
+            "kind": "none"
+          },
+          "kind": "delegate",
+          "name": "transfer_delegator",
+          "routes": []
+        },
+        {
+          "consumes": [],
+          "emits": {
+            "kind": "none"
+          },
+          "kind": "leader",
+          "name": "burn",
+          "routes": []
+        }
+      ],
+      "name": "KAS20",
+      "sil": "sil/KAS20.sil",
+      "state": "KCC20State"
+    },
+    {
+      "entries": [
+        {
+          "consumes": [],
+          "emits": {
+            "kind": "outputs",
+            "outputs": [
+              {
+                "actors": [
+                  "PublicMint"
+                ],
+                "auth_index": 0,
+                "name": "minter"
+              },
+              {
+                "actors": [
+                  "KAS20"
+                ],
+                "auth_index": 1,
+                "name": "recipient"
+              }
+            ]
+          },
+          "kind": "leader",
+          "name": "mint",
+          "routes": [
+            {
+              "output": "minter",
+              "successor": {
+                "kind": "exact_self"
+              }
+            },
+            {
+              "output": "recipient",
+              "successor": {
+                "actor": "KAS20",
+                "kind": "constructed",
+                "state": "recipient_state"
+              }
+            }
+          ]
+        },
+        {
+          "consumes": [],
+          "emits": {
+            "kind": "outputs",
+            "outputs": [
+              {
+                "actors": [
+                  "PublicMint"
+                ],
+                "auth_index": 0,
+                "name": "minter"
+              },
+              {
+                "actors": [
+                  "PublicMint"
+                ],
+                "auth_index": 1,
+                "name": "additional"
+              }
+            ]
+          },
+          "kind": "leader",
+          "name": "split",
+          "routes": [
+            {
+              "output": "minter",
+              "successor": {
+                "kind": "exact_self"
+              }
+            },
+            {
+              "output": "additional",
+              "successor": {
+                "actor": "PublicMint",
+                "kind": "constructed",
+                "state": "DepositState { owner: new_owner }"
+              }
+            }
+          ]
+        },
+        {
+          "consumes": [],
+          "emits": {
+            "kind": "outputs",
+            "outputs": [
+              {
+                "actors": [
+                  "PublicMint"
+                ],
+                "auth_index": 0,
+                "name": "minter"
+              }
+            ]
+          },
+          "kind": "leader",
+          "name": "rebalance_value",
+          "routes": [
+            {
+              "output": "minter",
+              "successor": {
+                "kind": "exact_self"
+              }
+            }
+          ]
+        },
+        {
+          "consumes": [
+            {
+              "actor": "PublicMint",
+              "name": "retiring"
+            }
+          ],
+          "emits": {
+            "kind": "outputs",
+            "outputs": [
+              {
+                "actors": [
+                  "PublicMint"
+                ],
+                "auth_index": 0,
+                "name": "minter"
+              }
+            ]
+          },
+          "kind": "leader",
+          "name": "reclaim",
+          "routes": [
+            {
+              "output": "minter",
+              "successor": {
+                "kind": "exact_self"
+              }
+            }
+          ]
+        },
+        {
+          "consumes": [
+            {
+              "actor": "PublicMint",
+              "name": "leader"
+            }
+          ],
+          "emits": {
+            "kind": "none"
+          },
+          "kind": "delegate",
+          "name": "reclaim_delegator",
+          "routes": []
+        }
+      ],
+      "name": "PublicMint",
+      "sil": "sil/PublicMint.sil",
+      "state": "DepositState"
+    }
+  ],
+  "app": "KAS20Token",
+  "modules": [
+    "contracts/app.ag",
+    "contracts/minter.ag",
+    "contracts/token.ag",
+    "../../contracts/kcc20.ag"
+  ],
+  "root": "contracts/app.ag",
+  "templates": [
+    {
+      "actor": "KAS20",
+      "hash": null,
+      "symbol": "gen__kas20_template"
+    },
+    {
+      "actor": "PublicMint",
+      "hash": null,
+      "symbol": "gen__public_mint_template"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+import "./minter.ag";
+
+app KAS20Token {
+    actor KAS20;
+    actor PublicMint;
+}

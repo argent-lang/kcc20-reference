@@ -1,0 +1,16 @@
+[package]
+name = "kas20"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94.1"
+description = "KAS-backed KCC20 token and offline launch example"
+license = "ISC"
+publish = false
+
+[dependencies]
+kcc20-reference = { path = "../.." }
+# Match the reference's compiler, runtime, and consensus revisions.
+argent = { git = "https://github.com/argent-lang/argent", rev = "9a9f4b107116d0b259fae629f200fa3b663e7e9d" }
+argent-runtime = { git = "https://github.com/argent-lang/argent", rev = "9a9f4b107116d0b259fae629f200fa3b663e7e9d" }
+kaspa-consensus-core = { git = "https://github.com/kaspanet/rusty-kaspa", rev = "a41a333b08848f41bf737b72592e463a6011b8ac" }
+serde_json = "1"

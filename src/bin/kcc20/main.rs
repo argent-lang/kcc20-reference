@@ -6,8 +6,7 @@ use kaspa_consensus_core::{Hash, tx::CovenantBinding};
 
 mod chain_borrow;
 mod public_mint;
-mod support;
-use support::{DemoResult, demo_keys, demo_outpoint, sign_input};
+use kcc20_reference::demo_support::{DemoResult, demo_keys, demo_outpoint, sign_input};
 
 #[cfg(test)]
 mod tests;

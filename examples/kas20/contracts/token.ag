@@ -1,0 +1,98 @@
+// KAS20 uses direct KCC20 transfer checks with exact sompi backing and burning.
+import "../../../contracts/kcc20.ag";
+
+actor KAS20 owns KCC20State {
+    entry transfer(
+        KCC20State[] next_states,
+        byte[] witness
+    ) consumes {
+        delegates: KAS20[0..=MAX_DELEGATES]
+    } emits {
+        next_outputs: KAS20[1..=MAX_TOKEN_OUTPUTS]
+    } {
+        require(next_states.length == next_outputs.length);
+        require(witness.length > 0);
+
+        // Each output token base unit must be backed by one sompi.
+        for (i, 0, next_states.length, MAX_TOKEN_OUTPUTS) {
+            require(next_outputs[i].value == next_states[i].amount);
+            require_valid_owner_scheme(next_states[i].owner_scheme);
+            require_valid_borrow_scheme(next_states[i].borrow_scheme);
+            require(next_states[i].extension_commitment == extension_commitment);
+        }
+
+        // Only the leader witness carries a path selector.
+        byte path = witness[0];
+        byte[] path_witness = witness.slice(1, witness.length);
+
+        if (path == PATH_NORMAL) {
+            require_owner_authorized(owner, owner_scheme, path_witness);
+        } else if (path == PATH_BORROW) {
+            int amount_threshold = 0;
+            byte[32] next_borrow_guard = borrow_guard;
+
+            if (borrow_scheme == BORROW_DISABLED) {
+                require(false);
+            } else if (borrow_scheme == BORROW_AMOUNT_THRESHOLD) {
+                require(path_witness.length == 0);
+                amount_threshold = int(byte[8](borrow_guard.slice(0, 8)));
+                // Negative thresholds behave as zero; borrowing still requires an increase.
+                if (amount_threshold < 0) {
+                    amount_threshold = 0;
+                }
+            } else if (borrow_scheme == BORROW_SCHNORR_SIGNATURE) {
+                // Converting to byte[65] checks the signature length.
+                require(checkSig(
+                    sig(byte[65](path_witness)),
+                    pubkey(borrow_guard)
+                ));
+            } else if (borrow_scheme == BORROW_HASH_CHAIN) {
+                require(path_witness.length == 129);
+
+                next_borrow_guard = byte[32](path_witness.slice(0, 32));
+                pubkey one_time_public_key = pubkey(byte[32](
+                    path_witness.slice(32, 64)
+                ));
+                sig borrow_signature = sig(byte[65](
+                    path_witness.slice(64, 129)
+                ));
+
+                // The current guard commits to the next guard and its signing key.
+                require(
+                    blake3(byte[](
+                        next_borrow_guard + byte[](one_time_public_key)
+                    )) == borrow_guard
+                );
+                require(checkSig(borrow_signature, one_time_public_key));
+            } else {
+                require(false);
+            }
+
+            // Return the borrowed state to its owner with the expected guard.
+            require(next_states[0].owner == owner);
+            require(next_states[0].owner_scheme == owner_scheme);
+            require(next_states[0].borrow_scheme == borrow_scheme);
+            require(next_states[0].borrow_guard == next_borrow_guard);
+
+            // Increase tokens without reducing the borrowed input's sompi.
+            int amount_increase = next_states[0].amount - amount;
+            require(amount_increase > amount_threshold);
+            require(next_outputs[0].value >= self.value);
+        } else {
+            require(false);
+        }
+
+        // Bind the supplied states to the continuation outputs.
+        become next_outputs <- KAS20[](next_states);
+    }
+
+    delegate transfer_delegator(byte[] witness) consumes {
+        leader: KAS20
+    } {
+        require_owner_authorized(owner, owner_scheme, witness);
+    }
+
+    entry burn(byte[] witness) emits none {
+        require_owner_authorized(owner, owner_scheme, witness);
+    }
+}

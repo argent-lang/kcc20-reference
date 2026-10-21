@@ -1,0 +1,63 @@
+// Uncapped public minter. Its owner controls only its KAS deposit.
+import "./token.ag";
+
+const byte[32] KAS20_EXTENSION = byte[32](0x0000000000000000000000000000000000000000000000000000000000000000);
+
+state DepositState {
+    pubkey owner;
+}
+
+actor PublicMint owns DepositState {
+    entry mint(KCC20State recipient_state) emits {
+        minter: PublicMint,
+        recipient: KAS20,
+    } {
+        require(recipient_state.extension_commitment == KAS20_EXTENSION);
+        require_valid_owner_scheme(recipient_state.owner_scheme);
+        require_valid_borrow_scheme(recipient_state.borrow_scheme);
+        require(minter.value == self.value);
+        require(recipient.value == recipient_state.amount);
+        become {
+            minter <- self,
+            recipient <- KAS20(recipient_state),
+        };
+    }
+
+    // Anyone can create another minter by funding its deposit.
+    entry split(pubkey new_owner) emits {
+        minter: PublicMint,
+        additional: PublicMint,
+    } {
+        require(minter.value == self.value);
+        unrestricted(additional.value);
+        become {
+            minter <- self,
+            additional <- PublicMint(DepositState { owner: new_owner }),
+        };
+    }
+
+    // The owner can change the KAS deposit without changing the minter state.
+    entry rebalance_value(sig owner_signature) emits {
+        minter: PublicMint,
+    } {
+        require(checkSig(owner_signature, owner));
+        unrestricted(minter.value);
+        become minter <- self;
+    }
+
+    // Retire one minter while preserving another.
+    entry reclaim() consumes {
+        retiring: PublicMint,
+    } emits {
+        minter: PublicMint,
+    } {
+        require(minter.value == self.value);
+        become minter <- self;
+    }
+
+    delegate reclaim_delegator(sig owner_signature) consumes {
+        leader: PublicMint,
+    } {
+        require(checkSig(owner_signature, owner));
+    }
+}
